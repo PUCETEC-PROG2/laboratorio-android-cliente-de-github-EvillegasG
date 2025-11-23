@@ -4,5 +4,7 @@
     <string name="test_text">Test Text</string>
     <string name="repo_description">Repository Description</string>
     <string name="repo_lang">Language</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>
 
