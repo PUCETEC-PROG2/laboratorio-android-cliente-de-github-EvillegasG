@@ -1,11 +1,19 @@
 package ec.edu.uisek.githubclient
 
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import ec.edu.uisek.githubclient.databinding.ActivityRepoFormBinding
+import ec.edu.uisek.githubclient.models.Repo
+import ec.edu.uisek.githubclient.models.RepoRequest
+import ec.edu.uisek.githubclient.services.RetrofitClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class RepoForm : AppCompatActivity() {
 
@@ -42,5 +50,44 @@ class RepoForm : AppCompatActivity() {
         if (!validateForm()) {
             return
         }
+
+        val repoName = repoFormBinding.repoNameInput.text.toString()
+        val repoDescription = repoFormBinding.repoDescriptionInput.text.toString()
+
+        val repoRequest: RepoRequest = RepoRequest(
+            name = repoName,
+            description = repoDescription
+        )
+
+        val apiService = RetrofitClient.gitHubApiService
+        val call = apiService.addRepository(repoRequest)
+
+        call.enqueue(object : Callback<Repo> {
+            override fun onResponse(call: Call<Repo>, response: Response<Repo>) {
+                if (response.isSuccessful) {
+                    Log.d("RepoForm", "El repositorio ${repoName} fue creado exitosamente")
+                    showMessage("El repositorio ${repoName} fue creado exitosamente")
+                    finish()
+                } else {
+                    val errorMsg = when (response.code()) {
+                        401 -> "No autorizado"
+                        403 -> "Prohibido"
+                        404 -> "No encontrado"
+                        else -> "Error: ${response.code()}"
+                    }
+                    Log.e("RepoForm", "Error: $errorMsg")
+                    showMessage(msg = "Error: $errorMsg")
+                }
+            }
+
+            override fun onFailure(call: Call<Repo>, t: Throwable) {
+                Log.e("RepoForm", "Error de red: ${t.message}")
+                showMessage("Error de red: ${t.message}")
+            }
+        })
+    }
+
+    private fun showMessage(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 }
